@@ -4,6 +4,17 @@ This guide describes how to run and deploy the **Rockola 24 / TouchTunes Jukebox
 
 ---
 
+## 0. Automated GitHub Actions CI/CD Workflow
+
+The repository includes an automated GitHub Actions pipeline (`.github/workflows/build-ubuntu.yml`) that:
+1. Validates TypeScript types and lints the code.
+2. Compiles the production client bundle and standalone Linux Node.js server (`dist/server.cjs`).
+3. Performs a headless smoke test verifying `/api/health` responsiveness.
+4. Packages standalone release archives: `rockola24-ubuntu-x64.tar.gz` and `rockola24-ubuntu-x64.zip` with SHA256 checksums.
+5. Uploads downloadable artifacts to the GitHub Actions run summary, and creates GitHub Releases automatically when pushing tags (e.g., `git tag v1.0.0 && git push --tags`).
+
+---
+
 ## 1. Prerequisites (Ubuntu Linux)
 
 Open a terminal on Ubuntu and install Node.js (v18 or v20 LTS) and Chromium:
@@ -33,8 +44,15 @@ npm -v    # Should show 10.x.x
 
 ## 2. Quick Start (Single Command)
 
-In the application root directory, simply run:
+### Option A: Complete System Installation (Service + Desktop Icon)
+Run the auto-installer with sudo:
+```bash
+sudo ./install-ubuntu.sh
+```
+This automatically installs Node.js, configures `/opt/rockola-jukebox`, enables the systemd service, and adds desktop & autostart launchers.
 
+### Option B: Local Runner & Kiosk
+In the application directory:
 ```bash
 ./run-ubuntu.sh
 ```

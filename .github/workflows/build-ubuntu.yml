@@ -1,0 +1,113 @@
+name: Build for Ubuntu Linux
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-ubuntu:
+    name: Build & Package Ubuntu Linux App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Validate TypeScript Code & Lint
+        run: npm run lint
+
+      - name: Build Production Assets & Linux Server Bundle
+        run: npm run build
+
+      - name: Verify Server Startup & Health Check (Smoke Test)
+        run: |
+          echo "Starting Rockola 24 server on Ubuntu..."
+          node dist/server.cjs &
+          SERVER_PID=$!
+          
+          # Wait up to 15 seconds for server to answer
+          for i in {1..15}; do
+            if curl -s -f http://localhost:3000/api/health; then
+              echo "Server responded successfully!"
+              break
+            fi
+            echo "Waiting for server... ($i/15)"
+            sleep 1
+          done
+          
+          HEALTH_STATUS=$(curl -s http://localhost:3000/api/health)
+          echo "Health check response: $HEALTH_STATUS"
+          
+          # Clean up test server
+          kill $SERVER_PID 2>/dev/null || true
+
+      - name: Prepare Standalone Ubuntu Distribution Package
+        run: |
+          PACKAGE_NAME="rockola24-ubuntu-x64"
+          mkdir -p "$PACKAGE_NAME"
+          
+          # Copy compiled distribution files
+          cp -r dist "$PACKAGE_NAME/"
+          
+          # Copy executable scripts & service configs
+          cp package.json "$PACKAGE_NAME/"
+          cp run-ubuntu.sh "$PACKAGE_NAME/"
+          cp install-ubuntu.sh "$PACKAGE_NAME/"
+          cp rockola.service "$PACKAGE_NAME/"
+          cp rockola.desktop "$PACKAGE_NAME/"
+          cp UBUNTU_SETUP.md "$PACKAGE_NAME/"
+          
+          # Ensure execution permissions
+          chmod +x "$PACKAGE_NAME/run-ubuntu.sh"
+          chmod +x "$PACKAGE_NAME/install-ubuntu.sh"
+          
+          # Create compressed archives
+          tar -czf "${PACKAGE_NAME}.tar.gz" "$PACKAGE_NAME"
+          zip -r "${PACKAGE_NAME}.zip" "$PACKAGE_NAME"
+          
+          # Compute SHA256 checksums
+          sha256sum "${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.tar.gz.sha256"
+          sha256sum "${PACKAGE_NAME}.zip" > "${PACKAGE_NAME}.zip.sha256"
+          
+          echo "Generated packages:"
+          ls -lh rockola24-ubuntu-x64*
+
+      - name: Upload Ubuntu Linux Package Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rockola24-ubuntu-x64
+          path: |
+            rockola24-ubuntu-x64.tar.gz
+            rockola24-ubuntu-x64.zip
+            rockola24-ubuntu-x64.tar.gz.sha256
+            rockola24-ubuntu-x64.zip.sha256
+          retention-days: 14
+
+      - name: Create GitHub Release (On Tag Push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            rockola24-ubuntu-x64.tar.gz
+            rockola24-ubuntu-x64.zip
+            rockola24-ubuntu-x64.tar.gz.sha256
+            rockola24-ubuntu-x64.zip.sha256
+          generate_release_notes: true
+          draft: false
+          prerelease: false
