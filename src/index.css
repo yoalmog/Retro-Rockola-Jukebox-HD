@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #0A0A0A;
+    color: #e5e7eb;
+    font-family: 'Rubik', 'Assistant', system-ui, -apple-system, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow-x: hidden;
+  }
+}
+
+.font-righteous {
+  font-family: 'Righteous', 'Rubik', cursive, sans-serif;
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', 'Chakra Petch', monospace, sans-serif;
+}
+
+.font-arcade {
+  font-family: 'VT323', monospace;
+}
+
+.font-chakra {
+  font-family: 'Chakra Petch', 'Rubik', sans-serif;
+}
+
+.font-rye {
+  font-family: 'Rye', 'Playfair Display', serif;
+}
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.font-metal {
+  font-family: 'Permanent Marker', 'Impact', cursive, sans-serif;
+}
+
+.font-playfair {
+  font-family: 'Playfair Display', serif;
+}
+
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-jakarta {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* CRT Scanline Effect (Optional overlay) */
+.crt-scanlines {
+  background: linear-gradient(
+    rgba(10, 10, 10, 0) 50%, 
+    rgba(0, 0, 0, 0.4) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(245, 158, 11, 0.02),
+    rgba(0, 0, 0, 0.02),
+    rgba(245, 158, 11, 0.02)
+  );
+  background-size: 100% 3px, 4px 100%;
+  pointer-events: none;
+}
+
+/* Elegant Dark Glows */
+.neon-glow-amber {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.35), inset 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.35), inset 0 0 8px rgba(6, 182, 212, 0.15);
+}
+
+.neon-glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), inset 0 0 8px rgba(239, 68, 68, 0.15);
+}
+
+.neon-glow-emerald {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.35), inset 0 0 8px rgba(16, 185, 129, 0.15);
+}
+
+.neon-text-glow {
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.6), 0 0 25px rgba(245, 158, 11, 0.3);
+}
+
+/* Elegant Dark Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.6);
+}

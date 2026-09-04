@@ -1,0 +1,19 @@
+[Unit]
+Description=Rockola 24 Digital Jukebox Service
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/rockola-jukebox
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+# Audio access
+SupplementaryGroups=audio
+
+[Install]
+WantedBy=multi-user.target

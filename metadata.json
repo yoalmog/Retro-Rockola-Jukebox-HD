@@ -1,0 +1,6 @@
+{
+  "name": "rockola 24/7",
+  "description": "Commercial Rockola 24/7 digital jukebox software with multilanguage support, 5-button hardware keypad, CRT retro scanlines, Web Audio frequency sync, mobile web remote control, and Recharts analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
