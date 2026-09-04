@@ -24,10 +24,10 @@ echo "📦 Installing system packages (curl, chromium-browser)..."
 apt-get update -qq
 apt-get install -y -qq curl chromium-browser build-essential
 
-# 2. Check or install Node.js 20 LTS if missing
+# 2. Check or install Node.js 22 LTS if missing
 if ! command -v node &> /dev/null; then
-    echo "⚙️ Installing Node.js 20 LTS..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    echo "⚙️ Installing Node.js 22 LTS..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
     apt-get install -y -qq nodejs
 fi
 

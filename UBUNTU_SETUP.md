@@ -17,7 +17,7 @@ The repository includes an automated GitHub Actions pipeline (`.github/workflows
 
 ## 1. Prerequisites (Ubuntu Linux)
 
-Open a terminal on Ubuntu and install Node.js (v18 or v20 LTS) and Chromium:
+Open a terminal on Ubuntu and install Node.js (v22 LTS) and Chromium:
 
 ```bash
 # Update package list
@@ -26,8 +26,8 @@ sudo apt-get update
 # Install curl and git if not present
 sudo apt-get install -y curl git build-essential
 
-# Install Node.js 20.x
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 22.x LTS
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 # Install Chromium browser (for kiosk display)

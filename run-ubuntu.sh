@@ -19,7 +19,7 @@ echo "========================================================"
 if ! command -v node &> /dev/null; then
     echo "❌ Node.js is not installed."
     echo "👉 To install Node.js on Ubuntu, run:"
-    echo "   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+    echo "   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -"
     echo "   sudo apt-get install -y nodejs"
     exit 1
 fi
