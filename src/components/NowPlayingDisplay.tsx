@@ -4,7 +4,7 @@ import { getTheme } from '../utils/themeStyles';
 import { getSongCoverArt, generateComingSoonCoverArt } from '../utils/coverArtUtils';
 import { getTranslation } from '../utils/i18n';
 import { VisualizerCanvas } from './VisualizerCanvas';
-import { Play, Pause, SkipForward, Disc, Sparkles, Activity, Layers, Heart, Mic, Film, Tv, Maximize2 } from 'lucide-react';
+import { Play, Pause, SkipForward, Disc, Sparkles, Activity, Layers, Heart, Mic, Film, Tv, Maximize2, PictureInPicture2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { audioEngineService } from '../services/audioEngine';
 
@@ -23,7 +23,7 @@ interface NowPlayingDisplayProps {
   language?: AppLanguage;
   onToggleFavorite?: (songId: string) => void;
   onOpenLyrics?: () => void;
-  onOpenVideoStage?: () => void;
+  onOpenVideoStage?: (mode?: 'cinema' | 'floating') => void;
 }
 
 export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
@@ -165,10 +165,15 @@ export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
                   <span className="text-[10px] font-chakra px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 uppercase border border-cyan-500/30">
                     {currentSong.genre}
                   </span>
+                  {currentSong.fileFormat && (
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      {currentSong.fileFormat}
+                    </span>
+                  )}
                   {isVideo && (
                     <span className="text-[10px] font-chakra px-1.5 py-0.5 rounded bg-purple-600 text-white font-black flex items-center gap-1 shadow-[0_0_8px_rgba(168,85,247,0.6)]">
                       <Film className="w-3 h-3" />
-                      <span>HD VIDEO</span>
+                      <span>{currentSong.fileFormat ? `${currentSong.fileFormat} VIDEO` : 'HD VIDEO'}</span>
                     </span>
                   )}
                 </div>
@@ -176,12 +181,12 @@ export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
                 <div className="flex items-center gap-1.5">
                   {isVideo && onOpenVideoStage && (
                     <button
-                      onClick={onOpenVideoStage}
-                      className="p-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/40 text-xs font-chakra font-bold flex items-center gap-1 transition-all cursor-pointer shadow"
-                      title="Open Cinema Video Stage"
+                      onClick={() => onOpenVideoStage('floating')}
+                      className="px-2 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-chakra font-black text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_12px_rgba(168,85,247,0.7)] animate-pulse"
+                      title="Open Pop-Out Video Player for Clip"
                     >
-                      <Maximize2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">STAGE</span>
+                      <Film className="w-3.5 h-3.5" />
+                      <span>SHOW VIDEO PLAYER</span>
                     </button>
                   )}
 
@@ -224,14 +229,24 @@ export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
               />
               <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
                 {onOpenVideoStage && (
-                  <button
-                    onClick={onOpenVideoStage}
-                    className="px-2 py-0.5 rounded bg-black/80 hover:bg-purple-600 text-white border border-white/20 text-[10px] font-chakra flex items-center gap-1 cursor-pointer transition-all shadow"
-                    title="Fullscreen Cinema Stage"
-                  >
-                    <Maximize2 className="w-3 h-3" />
-                    <span>CINEMA STAGE</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => onOpenVideoStage('floating')}
+                      className="px-2 py-0.5 rounded bg-black/80 hover:bg-purple-600 text-purple-200 hover:text-white border border-purple-400/40 text-[10px] font-chakra flex items-center gap-1 cursor-pointer transition-all shadow"
+                      title="Pop out Floating Video Player"
+                    >
+                      <PictureInPicture2 className="w-3 h-3" />
+                      <span>FLOAT</span>
+                    </button>
+                    <button
+                      onClick={() => onOpenVideoStage('cinema')}
+                      className="px-2 py-0.5 rounded bg-black/80 hover:bg-purple-600 text-white border border-white/20 text-[10px] font-chakra flex items-center gap-1 cursor-pointer transition-all shadow"
+                      title="Fullscreen Cinema Stage"
+                    >
+                      <Maximize2 className="w-3 h-3" />
+                      <span>THEATER</span>
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => setShowInlineVideo(false)}

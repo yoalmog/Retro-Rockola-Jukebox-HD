@@ -91,7 +91,26 @@ export default function App() {
   const [isPhotoBoothOpen, setIsPhotoBoothOpen] = useState(false);
   const [isMobileRemoteOpen, setIsMobileRemoteOpen] = useState(false);
   const [isMediaSourceModalOpen, setIsMediaSourceModalOpen] = useState(false);
-  const [isVideoStageOpen, setIsVideoStageOpen] = useState(false);
+
+  // Dedicated Video Player for Clips State (floating PiP or fullscreen cinema theater)
+  const [videoPlayerMode, setVideoPlayerMode] = useState<'closed' | 'floating' | 'cinema'>('closed');
+  const [isVideoMinimized, setIsVideoMinimized] = useState(false);
+  const [autoShowVideoForClips, setAutoShowVideoForClips] = useState(true);
+
+  // Check if active track is a video clip
+  const isCurrentSongClip = Boolean(currentSong && (currentSong.mediaType === 'video' || currentSong.videoUrl));
+
+  // Automatically show Video Player whenever a video clip begins playing
+  useEffect(() => {
+    if (currentSong) {
+      const isClip = currentSong.mediaType === 'video' || Boolean(currentSong.videoUrl);
+      if (isClip && autoShowVideoForClips) {
+        setVideoPlayerMode(prev => (prev === 'closed' ? 'floating' : prev));
+        setIsVideoMinimized(false);
+        showToast(`🎬 Playing Clip: [${currentSong.code}] ${currentSong.title}`);
+      }
+    }
+  }, [currentSong?.id, autoShowVideoForClips]);
 
   // Active Media Source Filter (all, audio, video, local, stream, factory)
   const activeMediaFilter: MediaSourceFilter = config.mediaSourceFilter || 'all';
@@ -687,6 +706,33 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Dedicated Video Player for Clips Button */}
+              <button
+                onClick={() => {
+                  soundEffects.playButtonClick();
+                  if (isCurrentSongClip) {
+                    setVideoPlayerMode(prev => prev === 'closed' ? 'floating' : prev === 'floating' ? 'cinema' : 'closed');
+                  } else {
+                    handleSelectMediaFilter(activeMediaFilter === 'video' ? 'all' : 'video');
+                    showToast(activeMediaFilter === 'video' ? 'Showing all media tracks' : '🎬 Filtered to HD Video Clips');
+                  }
+                }}
+                className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border text-[11px] sm:text-xs font-chakra font-black flex items-center gap-1.5 cursor-pointer shadow transition-all ${
+                  isCurrentSongClip
+                    ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 text-white border-purple-400 shadow-[0_0_16px_rgba(168,85,247,0.8)] animate-pulse'
+                    : activeMediaFilter === 'video'
+                    ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.7)]'
+                    : 'bg-[#141828] hover:bg-purple-600 hover:text-white text-purple-300 border-purple-500/30'
+                }`}
+                title={isCurrentSongClip ? "Toggle Video Player (Floating / Cinema Stage)" : "Show all HD Video Clips"}
+              >
+                <Film className="w-3.5 h-3.5 text-cyan-300" />
+                <span>{isCurrentSongClip ? 'VIDEO PLAYER' : 'CLIPS'}</span>
+                {isCurrentSongClip && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping" />
+                )}
+              </button>
+
               {/* Media Sources & Video Options Button */}
               <button
                 onClick={() => {
@@ -763,7 +809,7 @@ export default function App() {
                   language={config.language}
                   onToggleFavorite={handleToggleFavorite}
                   onOpenLyrics={() => setIsLyricsOpen(true)}
-                  onOpenVideoStage={() => setIsVideoStageOpen(true)}
+                  onOpenVideoStage={(stageMode) => setVideoPlayerMode(stageMode || 'floating')}
                 />
 
                 <QueueList
@@ -860,7 +906,7 @@ export default function App() {
                     language={config.language}
                     onToggleFavorite={handleToggleFavorite}
                     onOpenLyrics={() => setIsLyricsOpen(true)}
-                    onOpenVideoStage={() => setIsVideoStageOpen(true)}
+                    onOpenVideoStage={(stageMode) => setVideoPlayerMode(stageMode || 'floating')}
                   />
                 </div>
 
@@ -1094,23 +1140,45 @@ export default function App() {
         )}
 
         {/* Cinema Video Jukebox Stage Modal */}
-        {isVideoStageOpen && (
-          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none animate-in fade-in duration-200">
+        {videoPlayerMode === 'cinema' && (
+          <div className="fixed inset-0 z-50 bg-black/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none animate-in fade-in duration-200">
             <div className="max-w-5xl w-full flex flex-col gap-2">
               <VideoJukeboxStage
                 currentSong={currentSong}
                 isPlaying={isPlaying}
                 isMuted={isMuted}
+                mode="cinema"
+                onToggleMode={(newMode) => setVideoPlayerMode(newMode)}
                 onTogglePlay={() => {
                   if (isPlaying) audioEngine.pause();
                   else audioEngine.resume();
                 }}
                 onSkipNext={handlePlayNextInQueue}
                 onToggleMute={() => setIsMuted(m => !m)}
-                onClose={() => setIsVideoStageOpen(false)}
+                onClose={() => setVideoPlayerMode('closed')}
               />
             </div>
           </div>
+        )}
+
+        {/* Floating Picture-in-Picture Video Player for Clips */}
+        {videoPlayerMode === 'floating' && (
+          <VideoJukeboxStage
+            currentSong={currentSong}
+            isPlaying={isPlaying}
+            isMuted={isMuted}
+            mode="floating"
+            isMinimized={isVideoMinimized}
+            onToggleMinimize={() => setIsVideoMinimized(v => !v)}
+            onToggleMode={(newMode) => setVideoPlayerMode(newMode)}
+            onTogglePlay={() => {
+              if (isPlaying) audioEngine.pause();
+              else audioEngine.resume();
+            }}
+            onSkipNext={handlePlayNextInQueue}
+            onToggleMute={() => setIsMuted(m => !m)}
+            onClose={() => setVideoPlayerMode('closed')}
+          />
         )}
 
         {/* Media Source & Format Selector Modal */}
@@ -1125,7 +1193,7 @@ export default function App() {
           onClearCustomSongs={handleClearCustomSongs}
           onOpenVideoStage={() => {
             setIsMediaSourceModalOpen(false);
-            setIsVideoStageOpen(true);
+            setVideoPlayerMode('floating');
           }}
         />
 

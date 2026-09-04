@@ -312,7 +312,12 @@ export const SongBrowser: React.FC<SongBrowserProps> = ({
                     <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono mt-1 flex-wrap">
                       {(song.mediaType === 'video' || Boolean(song.videoUrl)) && (
                         <span className="px-1.5 py-0.2 rounded bg-purple-600 text-white font-chakra font-black text-[8px] tracking-wider">
-                          🎬 VIDEO
+                          🎬 {song.fileFormat ? `${song.fileFormat} VIDEO` : 'VIDEO'}
+                        </span>
+                      )}
+                      {song.fileFormat && song.mediaType !== 'video' && (
+                        <span className="px-1.5 py-0.2 rounded bg-blue-600/40 text-blue-200 border border-blue-400/40 font-mono font-bold text-[8px]">
+                          {song.fileFormat}
                         </span>
                       )}
                       {(song.mediaSource === 'local-file' || song.mediaSource === 'local-folder' || song.isCustom) && (

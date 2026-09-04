@@ -84,6 +84,17 @@ class AudioEngineService {
     this.videoElement = videoEl;
     if (this.videoElement) {
       this.videoElement.volume = this.volume;
+      if (this.isVideoTrack && this.currentSong) {
+        const vUrl = this.currentSong.videoUrl || this.currentSong.audioUrl;
+        if (vUrl && this.videoElement.src !== vUrl) {
+          this.videoElement.src = vUrl;
+        }
+        if (this.isPlaying) {
+          this.videoElement.play().catch(err => {
+            console.warn('Video auto-play notice on attach:', err);
+          });
+        }
+      }
     }
   }
 

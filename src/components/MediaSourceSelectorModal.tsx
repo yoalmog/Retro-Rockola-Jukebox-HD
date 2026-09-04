@@ -312,7 +312,7 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
                   </div>
                   <div>
                     <h3 className="font-chakra font-black text-sm text-white">MUSIC ONLY</h3>
-                    <p className="text-[11px] text-gray-400">MP3, WAV, FLAC, M4A, OGG</p>
+                    <p className="text-[11px] text-gray-400">MP3, WAV, FLAC, WMA, AAC, M4A, OGG</p>
                   </div>
                   <div className="text-xs font-mono font-bold text-blue-400">
                     {audioCount} Audio Tracks
@@ -339,7 +339,7 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
                   </div>
                   <div>
                     <h3 className="font-chakra font-black text-sm text-white">VIDEOS ONLY</h3>
-                    <p className="text-[11px] text-gray-400">MP4, WebM, MKV Music Videos</p>
+                    <p className="text-[11px] text-gray-400">AVI, WMV, MPG, MP4, WebM, MKV, MOV</p>
                   </div>
                   <div className="text-xs font-mono font-bold text-purple-400">
                     {videoCount} Video Tracks
@@ -456,16 +456,36 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
           {activeTab === 'import-files' && (
             <div className="flex flex-col gap-4">
               <div className="text-xs text-gray-300">
-                Drag and drop or select any audio or video files from your device. Supported formats:
+                Drag and drop or select any audio or video files from your device, computer storage, or USB drive:
               </div>
 
-              <div className="flex flex-wrap gap-1.5">
-                <span className="px-2 py-0.5 rounded bg-blue-500/20 border border-blue-500/30 text-blue-300 font-mono text-[11px]">
-                  🎵 Audio: {SUPPORTED_AUDIO_EXTENSIONS.join(' ')}
-                </span>
-                <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 text-purple-300 font-mono text-[11px]">
-                  🎬 Video: {SUPPORTED_VIDEO_EXTENSIONS.join(' ')}
-                </span>
+              {/* Supported Format Grid Badges */}
+              <div className="flex flex-col gap-2 bg-black/50 p-3.5 rounded-xl border border-white/10">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-chakra font-black text-purple-400 uppercase mr-1">🎬 Video Types:</span>
+                  <span className="px-2 py-0.5 rounded bg-purple-900/70 border border-purple-500/60 text-purple-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(168,85,247,0.3)]">.AVI</span>
+                  <span className="px-2 py-0.5 rounded bg-purple-900/70 border border-purple-500/60 text-purple-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(168,85,247,0.3)]">.WMV</span>
+                  <span className="px-2 py-0.5 rounded bg-purple-900/70 border border-purple-500/60 text-purple-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(168,85,247,0.3)]">.MPG / .MPEG</span>
+                  <span className="px-2 py-0.5 rounded bg-purple-900/70 border border-purple-500/60 text-purple-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(168,85,247,0.3)]">.MP4 / .M4V</span>
+                  <span className="px-1.5 py-0.5 rounded bg-purple-900/40 border border-purple-500/30 text-purple-300 font-mono text-[11px]">.MKV</span>
+                  <span className="px-1.5 py-0.5 rounded bg-purple-900/40 border border-purple-500/30 text-purple-300 font-mono text-[11px]">.MOV</span>
+                  <span className="px-1.5 py-0.5 rounded bg-purple-900/40 border border-purple-500/30 text-purple-300 font-mono text-[11px]">.WebM</span>
+                  <span className="px-1.5 py-0.5 rounded bg-purple-900/40 border border-purple-500/30 text-purple-300 font-mono text-[11px]">.FLV</span>
+                  <span className="px-1.5 py-0.5 rounded bg-purple-900/40 border border-purple-500/30 text-purple-300 font-mono text-[11px]">.VOB</span>
+                  <span className="px-1.5 py-0.5 rounded bg-purple-900/40 border border-purple-500/30 text-purple-300 font-mono text-[11px]">.TS</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-chakra font-black text-cyan-400 uppercase mr-1">🎵 Audio Types:</span>
+                  <span className="px-2 py-0.5 rounded bg-blue-900/70 border border-blue-500/60 text-blue-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(59,130,246,0.3)]">.MP3</span>
+                  <span className="px-2 py-0.5 rounded bg-blue-900/70 border border-blue-500/60 text-blue-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(59,130,246,0.3)]">.WAV</span>
+                  <span className="px-2 py-0.5 rounded bg-blue-900/70 border border-blue-500/60 text-blue-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(59,130,246,0.3)]">.WMA</span>
+                  <span className="px-2 py-0.5 rounded bg-blue-900/70 border border-blue-500/60 text-blue-200 font-mono font-bold text-xs shadow-[0_0_8px_rgba(59,130,246,0.3)]">.FLAC</span>
+                  <span className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-blue-300 font-mono text-[11px]">.M4A</span>
+                  <span className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-blue-300 font-mono text-[11px]">.AAC</span>
+                  <span className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-blue-300 font-mono text-[11px]">.OGG</span>
+                  <span className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-blue-300 font-mono text-[11px]">.OPUS</span>
+                  <span className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-blue-300 font-mono text-[11px]">.AIFF</span>
+                </div>
               </div>
 
               {/* Drag and Drop Box */}
@@ -495,7 +515,7 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
                     Click to browse or drop your media files here
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
-                    Select any MP3, WAV, FLAC, MP4, WebM, MKV file from your local disk or USB
+                    Directly load AVI, WMV, MPG, MP3, MP4, MKV, WAV, FLAC from local disk or USB
                   </div>
                 </div>
 
@@ -503,7 +523,7 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept="audio/*,video/*,.mp3,.wav,.m4a,.flac,.ogg,.aac,.opus,.wma,.mp4,.webm,.mkv,.mov,.ogv,.avi"
+                  accept="audio/*,video/*,.avi,.wmv,.asf,.mpg,.mpeg,.mpe,.mpv,.m2v,.mp4,.m4v,.webm,.mkv,.mov,.qt,.flv,.vob,.ogv,.3gp,.ts,.mts,.m2ts,.divx,.xvid,.mp3,.wma,.wav,.m4a,.flac,.ogg,.oga,.aac,.opus,.aiff,.aif,.alac,.ape,.mid,.midi,.ac3"
                   className="hidden"
                   onChange={(e) => handleFiles(e.target.files)}
                 />
@@ -512,7 +532,7 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
                   type="button"
                   className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-chakra font-black text-xs shadow-[0_0_15px_rgba(6,182,212,0.6)]"
                 >
-                  SELECT MEDIA FILES
+                  SELECT MEDIA FILES (AUDIO & VIDEO)
                 </button>
               </div>
             </div>

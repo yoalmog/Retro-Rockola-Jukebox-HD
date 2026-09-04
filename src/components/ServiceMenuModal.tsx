@@ -19,7 +19,7 @@ import { hardwareDiagnosticService } from '../services/hardwareDiagnosticService
 import { storageHealthService, StorageHealthReport } from '../services/storageHealthService';
 import { audioEngine } from '../services/audioEngine';
 import { generateTrackCode, DEFAULT_KEY_BINDINGS, DEFAULT_MACRO_SEQUENCES, createSystemBackupPackage, validateAndParseBackupPackage } from '../utils/storage';
-import { localMusicScannerService, ScanResult } from '../services/localMusicScanner';
+import { localMusicScannerService, ScanResult, createSongFromFile } from '../services/localMusicScanner';
 import { partyModeService, GroupSongRequest, PartyGuest } from '../services/partyModeService';
 import { selectAutoDjNextSong } from '../utils/autoDjService';
 
@@ -446,42 +446,19 @@ export const ServiceMenuModal: React.FC<ServiceMenuModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Audio file upload handler
+  // Media file upload handler (audio & video: AVI, WMV, MPG, MP3, MP4, etc.)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newSongs: Song[] = [];
     const baseCodeIndex = customSongs.length + 50;
-
-    Array.from(files).forEach((file: File, idx) => {
-      const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-      const parts = fileNameWithoutExt.split(' - ');
-      const artist = parts.length > 1 ? parts[0].trim() : 'Local Artist';
-      const title = parts.length > 1 ? parts[1].trim() : fileNameWithoutExt;
-
-      const blobUrl = URL.createObjectURL(file);
-
-      newSongs.push({
-        id: `custom-${Date.now()}-${idx}`,
-        code: generateTrackCode(baseCodeIndex + idx),
-        title: title,
-        artist: artist,
-        album: 'Custom Tracks (Local Music)',
-        genre: 'rock',
-        year: new Date().getFullYear(),
-        duration: 180,
-        audioUrl: blobUrl,
-        isCustom: true,
-        isNewlyImported: true,
-        isImported: true,
-        playCount: 0
-      });
-    });
+    const newSongs: Song[] = (Array.from(files) as File[]).map((file, idx) => 
+      createSongFromFile(file, baseCodeIndex + idx)
+    );
 
     onAddCustomSongs(newSongs);
     soundEffects.playSongSelect();
-    showFeedback(`✓ Added ${newSongs.length} new audio tracks to jukebox catalog!`);
+    showFeedback(`✓ Added ${newSongs.length} new tracks (AVI, WMV, MPG, MP3, MP4) to jukebox catalog!`);
   };
 
   // Logo upload handler
@@ -2950,17 +2927,28 @@ export const ServiceMenuModal: React.FC<ServiceMenuModalProps> = ({
 
               </div>
 
-              {/* Local MP3 Audio Files Uploader */}
+              {/* Local Media Files Uploader (Audio & Video) */}
               <div className="bg-[#0A0A0A] rounded-xl p-5 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400">
                     <Upload className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-chakra font-bold text-sm text-white">Upload Custom Audio Files (MP3, WAV, FLAC)</h4>
+                    <h4 className="font-chakra font-bold text-sm text-white">Upload Media Files (AVI, WMV, MPG, MP3, MP4 & more)</h4>
                     <p className="text-xs text-gray-400">
-                      Add songs from local storage into the jukebox catalog with automated dial codes (A50, A51, etc.)
+                      Add audio or video tracks from local storage or USB into the jukebox catalog with automated dial codes (A50, A51, etc.)
                     </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-purple-900/60 text-purple-300 font-mono">AVI</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-purple-900/60 text-purple-300 font-mono">WMV</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-purple-900/60 text-purple-300 font-mono">MPG</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-blue-900/60 text-blue-300 font-mono">MP3</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-purple-900/60 text-purple-300 font-mono">MP4</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-blue-900/60 text-blue-300 font-mono">WAV</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-purple-900/60 text-purple-300 font-mono">MKV</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-blue-900/60 text-blue-300 font-mono">FLAC</span>
+                      <span className="px-1.5 py-0.5 text-[10px] rounded bg-gray-800 text-gray-300 font-mono">+MORE</span>
+                    </div>
                   </div>
                 </div>
 
@@ -2969,21 +2957,21 @@ export const ServiceMenuModal: React.FC<ServiceMenuModalProps> = ({
                     ref={fileInputRef}
                     type="file"
                     multiple
-                    accept="audio/*"
+                    accept="audio/*,video/*,.avi,.wmv,.asf,.mpg,.mpeg,.mp3,.mp4,.m4v,.webm,.mkv,.mov,.flv,.vob,.wav,.flac,.wma,.ogg,.aac"
                     onChange={handleFileUpload}
                     className="hidden"
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-chakra font-bold text-xs cursor-pointer shadow"
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-chakra font-bold text-xs cursor-pointer shadow whitespace-nowrap"
                   >
-                    Select Audio Files
+                    Select Media Files
                   </button>
 
                   {customSongs.length > 0 && (
                     <button
                       onClick={onClearCustomSongs}
-                      className="px-3 py-2 rounded-xl bg-red-950 text-red-300 border border-red-800 text-xs font-chakra font-bold cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-red-950 text-red-300 border border-red-800 text-xs font-chakra font-bold cursor-pointer whitespace-nowrap"
                     >
                       Clear ({customSongs.length})
                     </button>

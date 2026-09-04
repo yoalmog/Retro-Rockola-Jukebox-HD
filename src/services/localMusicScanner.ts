@@ -8,18 +8,83 @@ import { Song, MediaType, MediaSourceType } from '../types/rockola';
 import { generateTrackCode } from '../utils/storage';
 import { hardwareDiagnosticService } from './hardwareDiagnosticService';
 
-export const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac', '.opus', '.wma'];
-export const SUPPORTED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mkv', '.mov', '.ogv', '.avi', '.m4v', '.mpg', '.mpeg'];
+export const SUPPORTED_AUDIO_EXTENSIONS = [
+  '.mp3',
+  '.wma',
+  '.wav',
+  '.m4a',
+  '.flac',
+  '.ogg',
+  '.oga',
+  '.aac',
+  '.opus',
+  '.aiff',
+  '.aif',
+  '.alac',
+  '.ape',
+  '.mid',
+  '.midi',
+  '.ac3'
+];
 
-export function isMediaFile(filename: string): { isMedia: boolean; mediaType: MediaType } {
+export const SUPPORTED_VIDEO_EXTENSIONS = [
+  '.avi',
+  '.wmv',
+  '.asf',
+  '.mpg',
+  '.mpeg',
+  '.mpe',
+  '.mpv',
+  '.m2v',
+  '.mp4',
+  '.m4v',
+  '.webm',
+  '.mkv',
+  '.mov',
+  '.qt',
+  '.flv',
+  '.f4v',
+  '.vob',
+  '.ogv',
+  '.3gp',
+  '.3g2',
+  '.ts',
+  '.mts',
+  '.m2ts',
+  '.divx',
+  '.xvid',
+  '.rm',
+  '.rmvb'
+];
+
+export const ALL_SUPPORTED_MEDIA_EXTENSIONS = [
+  ...SUPPORTED_AUDIO_EXTENSIONS,
+  ...SUPPORTED_VIDEO_EXTENSIONS
+];
+
+export function detectFileExtension(filename: string): string {
+  const match = filename.match(/\.([0-9a-z]+)(?:[\?#]|$)/i);
+  return match ? `.${match[1].toLowerCase()}` : '';
+}
+
+export function detectFormatBadge(filename: string): string {
+  const match = filename.match(/\.([0-9a-z]+)(?:[\?#]|$)/i);
+  return match ? match[1].toUpperCase() : 'MEDIA';
+}
+
+export function isMediaFile(filename: string): { isMedia: boolean; mediaType: MediaType; format: string } {
   const lower = filename.toLowerCase();
   for (const ext of SUPPORTED_VIDEO_EXTENSIONS) {
-    if (lower.endsWith(ext)) return { isMedia: true, mediaType: 'video' };
+    if (lower.endsWith(ext)) {
+      return { isMedia: true, mediaType: 'video', format: ext.replace('.', '').toUpperCase() };
+    }
   }
   for (const ext of SUPPORTED_AUDIO_EXTENSIONS) {
-    if (lower.endsWith(ext)) return { isMedia: true, mediaType: 'audio' };
+    if (lower.endsWith(ext)) {
+      return { isMedia: true, mediaType: 'audio', format: ext.replace('.', '').toUpperCase() };
+    }
   }
-  return { isMedia: false, mediaType: 'audio' };
+  return { isMedia: false, mediaType: 'audio', format: 'UNKNOWN' };
 }
 
 /**
@@ -27,7 +92,7 @@ export function isMediaFile(filename: string): { isMedia: boolean; mediaType: Me
  */
 export function createSongFromFile(file: File, codeIndex: number): Song {
   const rawTitle = file.name.replace(/\.[^/.]+$/, '');
-  const { mediaType } = isMediaFile(file.name);
+  const { mediaType, format } = isMediaFile(file.name);
   const objectUrl = URL.createObjectURL(file);
   const trackCode = generateTrackCode(codeIndex);
 
@@ -44,13 +109,14 @@ export function createSongFromFile(file: File, codeIndex: number): Song {
     code: trackCode,
     title,
     artist,
-    album: mediaType === 'video' ? 'Local Video Import' : 'Local Music Storage',
+    album: mediaType === 'video' ? `Local Video (${format})` : `Local Audio (${format})`,
     genre: mediaType === 'video' ? 'Music Videos' : 'Local Media',
     duration: 180,
     audioUrl: objectUrl,
     videoUrl: mediaType === 'video' ? objectUrl : undefined,
     mediaType,
     mediaSource: 'local-file',
+    fileFormat: format,
     isCustom: true,
     isNewlyImported: true,
     isImported: true,
@@ -124,7 +190,7 @@ class LocalMusicScannerService {
       // @ts-ignore - async iterator for DirectoryHandle
       for await (const entry of dirHandle.values()) {
         if (entry.kind === 'file') {
-          const { isMedia, mediaType } = isMediaFile(entry.name);
+          const { isMedia, mediaType, format } = isMediaFile(entry.name);
           if (isMedia) {
             scannedFilesCount++;
             
@@ -151,13 +217,14 @@ class LocalMusicScannerService {
                 code: trackCode,
                 title,
                 artist,
-                album: mediaType === 'video' ? 'Local Video Folder' : 'Local Media Folder',
+                album: mediaType === 'video' ? `Local Video (${format})` : `Local Media Folder (${format})`,
                 genre: mediaType === 'video' ? 'Music Videos' : 'Local Media',
                 duration: 180,
                 audioUrl: objectUrl,
                 videoUrl: mediaType === 'video' ? objectUrl : undefined,
                 mediaType,
                 mediaSource: 'local-folder',
+                fileFormat: format,
                 isCustom: true,
                 isNewlyImported: true,
                 isImported: true,

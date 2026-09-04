@@ -21,6 +21,7 @@ export interface Song {
   videoUrl?: string; // Optional direct video stream/file URL (.mp4, .webm, .mov, etc.)
   mediaType?: MediaType; // 'audio' (default) or 'video'
   mediaSource?: MediaSourceType; // 'built-in', 'local-file', 'local-folder', 'stream-url', 'custom'
+  fileFormat?: string; // e.g. 'AVI', 'WMV', 'MPG', 'MP3', 'MP4', 'FLAC', etc.
   audioBufferUrl?: string;
   isCustom?: boolean;
   lyrics?: string | string[];

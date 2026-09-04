@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Song } from '../types/rockola';
 import { soundEffects } from '../services/soundEffects';
 import { getSongCoverArt, generateComingSoonCoverArt } from '../utils/coverArtUtils';
-import { ChevronLeft, ChevronRight, Plus, Search, Check, Heart, Flame, Hash } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search, Check, Heart, Flame, Hash, Film } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface CategoryTab {
@@ -530,11 +530,15 @@ export const TouchTunesCarousel: React.FC<TouchTunesCarouselProps> = ({
                       </div>
 
                       {/* Video / Local File Indicator */}
-                      {(song.mediaType === 'video' || Boolean(song.videoUrl)) && (
+                      {(song.mediaType === 'video' || Boolean(song.videoUrl)) ? (
                         <div className="absolute bottom-2 left-2 bg-purple-900/90 backdrop-blur-md px-1.5 py-0.5 rounded text-white font-chakra font-black text-[9px] flex items-center gap-1 shadow border border-purple-400/50">
-                          <span>HD VIDEO</span>
+                          <span>{song.fileFormat ? `${song.fileFormat} VIDEO` : 'HD VIDEO'}</span>
                         </div>
-                      )}
+                      ) : song.fileFormat ? (
+                        <div className="absolute bottom-2 left-2 bg-blue-900/90 backdrop-blur-md px-1.5 py-0.5 rounded text-blue-200 font-mono font-bold text-[9px] flex items-center gap-1 shadow border border-blue-400/50">
+                          <span>{song.fileFormat}</span>
+                        </div>
+                      ) : null}
 
                       {/* Favorite Heart Toggle */}
                       {isCenter && onToggleFavorite && (
@@ -666,6 +670,12 @@ export const TouchTunesCarousel: React.FC<TouchTunesCarouselProps> = ({
                   <span className="px-2 py-0.5 rounded bg-cyan-500 text-black font-chakra font-black text-[9px]">
                     NOW SELECTED
                   </span>
+                  {(selectedSong.mediaType === 'video' || Boolean(selectedSong.videoUrl)) && (
+                    <span className="px-2 py-0.5 rounded bg-purple-600 text-white font-chakra font-black text-[9px] flex items-center gap-1 shadow-[0_0_8px_rgba(168,85,247,0.5)]">
+                      <Film className="w-2.5 h-2.5" />
+                      <span>{selectedSong.fileFormat ? `${selectedSong.fileFormat} CLIP` : 'HD VIDEO CLIP'}</span>
+                    </span>
+                  )}
                   <span className="text-xs text-amber-400 font-mono uppercase font-bold">
                     {selectedSong.genre} {selectedSong.year ? `• ${selectedSong.year}` : ''}
                   </span>
@@ -694,10 +704,23 @@ export const TouchTunesCarousel: React.FC<TouchTunesCarouselProps> = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleSelectSong(selectedSong)}
-                className="px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black font-chakra font-black text-sm sm:text-base flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.7)] cursor-pointer transition-all"
+                className={`px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-chakra font-black text-sm sm:text-base flex items-center gap-2 cursor-pointer transition-all ${
+                  selectedSong.mediaType === 'video' || Boolean(selectedSong.videoUrl)
+                    ? 'bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white shadow-[0_0_20px_rgba(168,85,247,0.8)]'
+                    : 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-black shadow-[0_0_20px_rgba(6,182,212,0.7)]'
+                }`}
               >
-                <Plus className="w-5 h-5" />
-                <span>SELECT & PLAY [ENTER]</span>
+                {selectedSong.mediaType === 'video' || Boolean(selectedSong.videoUrl) ? (
+                  <>
+                    <Film className="w-5 h-5 animate-pulse" />
+                    <span>PLAY VIDEO CLIP [ENTER]</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    <span>SELECT & PLAY [ENTER]</span>
+                  </>
+                )}
               </motion.button>
             </div>
 
