@@ -310,6 +310,16 @@ export const SongBrowser: React.FC<SongBrowserProps> = ({
                       {song.artist}
                     </p>
                     <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono mt-1 flex-wrap">
+                      {(song.mediaType === 'video' || Boolean(song.videoUrl)) && (
+                        <span className="px-1.5 py-0.2 rounded bg-purple-600 text-white font-chakra font-black text-[8px] tracking-wider">
+                          🎬 VIDEO
+                        </span>
+                      )}
+                      {(song.mediaSource === 'local-file' || song.mediaSource === 'local-folder' || song.isCustom) && (
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-chakra font-bold text-[8px]">
+                          💾 LOCAL
+                        </span>
+                      )}
                       <span className="flex items-center gap-0.5">
                         <Clock className="w-2.5 h-2.5" />
                         {formatDuration(song.duration)}

@@ -39,9 +39,12 @@ import { BootSequenceOverlay } from './components/BootSequenceOverlay';
 import { CrtScanlineOverlay } from './components/CrtScanlineOverlay';
 import { MobileRemoteOverlay } from './components/MobileRemoteOverlay';
 import { LyricsOverlay } from './components/LyricsOverlay';
+import { MediaSourceSelectorModal } from './components/MediaSourceSelectorModal';
+import { VideoJukeboxStage } from './components/VideoJukeboxStage';
+import { MediaSourceFilter } from './types/rockola';
 
 // Icons
-import { Hash, Search, Disc, Sparkles, AlertCircle, Radio, ListMusic, Palette, Crown, Settings, LayoutGrid, Layers, Tv, Shuffle, Camera, Smartphone, Home } from 'lucide-react';
+import { Hash, Search, Disc, Sparkles, AlertCircle, Radio, ListMusic, Palette, Crown, Settings, LayoutGrid, Layers, Tv, Shuffle, Camera, Smartphone, Home, Film } from 'lucide-react';
 
 export default function App() {
   // App Configuration
@@ -87,6 +90,47 @@ export default function App() {
   const [isBrandingModalOpen, setIsBrandingModalOpen] = useState(false);
   const [isPhotoBoothOpen, setIsPhotoBoothOpen] = useState(false);
   const [isMobileRemoteOpen, setIsMobileRemoteOpen] = useState(false);
+  const [isMediaSourceModalOpen, setIsMediaSourceModalOpen] = useState(false);
+  const [isVideoStageOpen, setIsVideoStageOpen] = useState(false);
+
+  // Active Media Source Filter (all, audio, video, local, stream, factory)
+  const activeMediaFilter: MediaSourceFilter = config.mediaSourceFilter || 'all';
+
+  const filteredBySourceSongs = React.useMemo(() => {
+    switch (activeMediaFilter) {
+      case 'audio':
+        return allSongs.filter(s => s.mediaType !== 'video' && !s.videoUrl);
+      case 'video':
+        return allSongs.filter(s => s.mediaType === 'video' || Boolean(s.videoUrl));
+      case 'local':
+        return allSongs.filter(s => s.mediaSource === 'local-file' || s.mediaSource === 'local-folder' || s.isCustom);
+      case 'stream':
+        return allSongs.filter(s => s.mediaSource === 'stream-url');
+      case 'factory':
+        return allSongs.filter(s => !s.isCustom && s.mediaSource !== 'local-file' && s.mediaSource !== 'local-folder');
+      case 'all':
+      default:
+        return allSongs;
+    }
+  }, [allSongs, activeMediaFilter]);
+
+  const handleSelectMediaFilter = (newFilter: MediaSourceFilter) => {
+    setConfig(prev => ({ ...prev, mediaSourceFilter: newFilter }));
+    showToast(`Media filter: ${newFilter.toUpperCase()}`);
+  };
+
+  const handleImportMediaSongs = (imported: Song[]) => {
+    const updated = [...customSongs, ...imported];
+    setCustomSongs(updated);
+    saveCustomSongs(updated);
+    showToast(`Added ${imported.length} track(s) to jukebox!`);
+  };
+
+  const handleClearCustomSongs = () => {
+    setCustomSongs([]);
+    saveCustomSongs([]);
+    showToast('Custom imported media cleared');
+  };
 
   // Alert Banner toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -643,6 +687,25 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Media Sources & Video Options Button */}
+              <button
+                onClick={() => {
+                  soundEffects.playButtonClick();
+                  setIsMediaSourceModalOpen(true);
+                }}
+                className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border text-[11px] sm:text-xs font-chakra font-bold flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow transition-all ${
+                  activeMediaFilter === 'video'
+                    ? 'bg-purple-600 text-white border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.7)]'
+                    : activeMediaFilter === 'audio'
+                    ? 'bg-blue-600/30 text-blue-300 border-blue-500/40'
+                    : 'bg-[#141828] hover:bg-purple-600 hover:text-white text-purple-300 border-purple-500/30'
+                }`}
+                title="Select Media Sources (Music, Videos, Local Files, Streams)"
+              >
+                <Film className="w-3.5 h-3.5" />
+                <span className="uppercase">{activeMediaFilter === 'all' ? 'MEDIA' : activeMediaFilter.toUpperCase()}</span>
+              </button>
+
               {/* Search Button */}
               <button
                 onClick={() => {
@@ -664,7 +727,7 @@ export default function App() {
               
               {/* 3D Cover Flow Carousel Deck & Tracklist */}
               <TouchTunesCarousel
-                songs={allSongs}
+                songs={filteredBySourceSongs}
                 onQueueSong={handleQueueSong}
                 onOpenSearch={() => setIsSearchKeyboardOpen(true)}
                 onOpenQuickNumber={() => setIsNumberPadOpen(true)}
@@ -700,6 +763,7 @@ export default function App() {
                   language={config.language}
                   onToggleFavorite={handleToggleFavorite}
                   onOpenLyrics={() => setIsLyricsOpen(true)}
+                  onOpenVideoStage={() => setIsVideoStageOpen(true)}
                 />
 
                 <QueueList
@@ -722,7 +786,7 @@ export default function App() {
             /* A-Z Alphabet Strip & Catalog Grid (Photo 2 Matching) */
             <div className="flex flex-col gap-3 sm:gap-4">
               <TouchTunesBrowseDeck
-                songs={allSongs}
+                songs={filteredBySourceSongs}
                 categories={GENRE_CATEGORIES}
                 playlists={playlists}
                 onQueueSong={handleQueueSong}
@@ -741,7 +805,7 @@ export default function App() {
                 <SongBrowser
                   categories={GENRE_CATEGORIES}
                   activeGenreIndex={activeGenreIndex}
-                  songs={allSongs}
+                  songs={filteredBySourceSongs}
                   selectedSongIndex={selectedSongIndex}
                   focusArea={focusArea}
                   onSelectGenre={(idx) => {
@@ -796,6 +860,7 @@ export default function App() {
                     language={config.language}
                     onToggleFavorite={handleToggleFavorite}
                     onOpenLyrics={() => setIsLyricsOpen(true)}
+                    onOpenVideoStage={() => setIsVideoStageOpen(true)}
                   />
                 </div>
 
@@ -838,6 +903,7 @@ export default function App() {
               else if (tab === 'more') setIsServiceMenuOpen(true);
             }}
             onOpenCoinModal={() => setIsCoinModalOpen(true)}
+            onOpenMediaSources={() => setIsMediaSourceModalOpen(true)}
             queueCount={queue.length}
             language={config.language}
             title={config.branding?.title}
@@ -1026,6 +1092,42 @@ export default function App() {
             onComplete={() => setIsBooting(false)}
           />
         )}
+
+        {/* Cinema Video Jukebox Stage Modal */}
+        {isVideoStageOpen && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 select-none animate-in fade-in duration-200">
+            <div className="max-w-5xl w-full flex flex-col gap-2">
+              <VideoJukeboxStage
+                currentSong={currentSong}
+                isPlaying={isPlaying}
+                isMuted={isMuted}
+                onTogglePlay={() => {
+                  if (isPlaying) audioEngine.pause();
+                  else audioEngine.resume();
+                }}
+                onSkipNext={handlePlayNextInQueue}
+                onToggleMute={() => setIsMuted(m => !m)}
+                onClose={() => setIsVideoStageOpen(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Media Source & Format Selector Modal */}
+        <MediaSourceSelectorModal
+          isOpen={isMediaSourceModalOpen}
+          onClose={() => setIsMediaSourceModalOpen(false)}
+          activeFilter={activeMediaFilter}
+          onSelectFilter={handleSelectMediaFilter}
+          allSongs={allSongs}
+          customSongs={customSongs}
+          onImportSongs={handleImportMediaSongs}
+          onClearCustomSongs={handleClearCustomSongs}
+          onOpenVideoStage={() => {
+            setIsMediaSourceModalOpen(false);
+            setIsVideoStageOpen(true);
+          }}
+        />
 
       </div>
     </TouchTunesKioskFrame>

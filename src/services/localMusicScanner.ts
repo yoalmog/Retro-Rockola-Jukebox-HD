@@ -1,11 +1,62 @@
 /**
- * Local Music Directory Scanner & Background Polling Service
- * Allows the jukebox to scan local directories for MP3/WAV audio files and automatically import them into the catalog.
+ * Local Media Directory Scanner & Background Polling Service
+ * Allows the jukebox to scan local directories for all audio and video media files
+ * (MP3, WAV, FLAC, M4A, OGG, AAC, MP4, WebM, MKV, MOV, OGV) and automatically import them into the catalog.
  */
 
-import { Song } from '../types/rockola';
+import { Song, MediaType, MediaSourceType } from '../types/rockola';
 import { generateTrackCode } from '../utils/storage';
 import { hardwareDiagnosticService } from './hardwareDiagnosticService';
+
+export const SUPPORTED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.aac', '.opus', '.wma'];
+export const SUPPORTED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mkv', '.mov', '.ogv', '.avi', '.m4v', '.mpg', '.mpeg'];
+
+export function isMediaFile(filename: string): { isMedia: boolean; mediaType: MediaType } {
+  const lower = filename.toLowerCase();
+  for (const ext of SUPPORTED_VIDEO_EXTENSIONS) {
+    if (lower.endsWith(ext)) return { isMedia: true, mediaType: 'video' };
+  }
+  for (const ext of SUPPORTED_AUDIO_EXTENSIONS) {
+    if (lower.endsWith(ext)) return { isMedia: true, mediaType: 'audio' };
+  }
+  return { isMedia: false, mediaType: 'audio' };
+}
+
+/**
+ * Creates a Song object from a picked or dropped File object
+ */
+export function createSongFromFile(file: File, codeIndex: number): Song {
+  const rawTitle = file.name.replace(/\.[^/.]+$/, '');
+  const { mediaType } = isMediaFile(file.name);
+  const objectUrl = URL.createObjectURL(file);
+  const trackCode = generateTrackCode(codeIndex);
+
+  let artist = mediaType === 'video' ? 'Local Video' : 'Local Audio';
+  let title = rawTitle;
+  if (rawTitle.includes(' - ')) {
+    const parts = rawTitle.split(' - ');
+    artist = parts[0].trim();
+    title = parts.slice(1).join(' - ').trim();
+  }
+
+  return {
+    id: `local-file-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    code: trackCode,
+    title,
+    artist,
+    album: mediaType === 'video' ? 'Local Video Import' : 'Local Music Storage',
+    genre: mediaType === 'video' ? 'Music Videos' : 'Local Media',
+    duration: 180,
+    audioUrl: objectUrl,
+    videoUrl: mediaType === 'video' ? objectUrl : undefined,
+    mediaType,
+    mediaSource: 'local-file',
+    isCustom: true,
+    isNewlyImported: true,
+    isImported: true,
+    playCount: 0
+  };
+}
 
 export interface ScanResult {
   timestamp: number;
@@ -21,11 +72,11 @@ class LocalMusicScannerService {
   private isPolling: boolean = false;
   private pollingTimer: number | null = null;
   private knownFileNames: Set<string> = new Set();
-  private scanPathName: string = './music';
+  private scanPathName: string = './media';
   private lastScanReport: ScanResult | null = null;
 
   /**
-   * Prompts user to pick a local music directory using the File System Access API
+   * Prompts user to pick a local media directory using the File System Access API
    */
   public async pickAndScanDirectory(existingSongs: Song[]): Promise<ScanResult> {
     const existingCodes = existingSongs.map(s => s.code);
@@ -36,7 +87,7 @@ class LocalMusicScannerService {
         // @ts-ignore - File System Access API
         this.activeDirectoryHandle = await window.showDirectoryPicker();
         if (this.activeDirectoryHandle) {
-          this.scanPathName = this.activeDirectoryHandle.name || './music';
+          this.scanPathName = this.activeDirectoryHandle.name || './media';
           return await this.scanDirectoryHandle(this.activeDirectoryHandle, existingCodes);
         }
       }
@@ -59,7 +110,7 @@ class LocalMusicScannerService {
   }
 
   /**
-   * Scans a DirectoryHandle for audio files
+   * Scans a DirectoryHandle for all audio and video media files
    */
   private async scanDirectoryHandle(
     dirHandle: FileSystemDirectoryHandle,
@@ -73,8 +124,8 @@ class LocalMusicScannerService {
       // @ts-ignore - async iterator for DirectoryHandle
       for await (const entry of dirHandle.values()) {
         if (entry.kind === 'file') {
-          const name = entry.name.toLowerCase();
-          if (name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.m4a') || name.endsWith('.flac') || name.endsWith('.ogg')) {
+          const { isMedia, mediaType } = isMediaFile(entry.name);
+          if (isMedia) {
             scannedFilesCount++;
             
             const rawTitle = entry.name.replace(/\.[^/.]+$/, "");
@@ -87,7 +138,7 @@ class LocalMusicScannerService {
               currentCodes.push(trackCode);
 
               // Parse title & artist if formatted as "Artist - Title"
-              let artist = 'Local Audio';
+              let artist = mediaType === 'video' ? 'Local Video' : 'Local Audio';
               let title = rawTitle;
               if (rawTitle.includes(' - ')) {
                 const parts = rawTitle.split(' - ');
@@ -100,10 +151,13 @@ class LocalMusicScannerService {
                 code: trackCode,
                 title,
                 artist,
-                album: 'Local Import Directory',
-                genre: 'Local MP3s',
+                album: mediaType === 'video' ? 'Local Video Folder' : 'Local Media Folder',
+                genre: mediaType === 'video' ? 'Music Videos' : 'Local Media',
                 duration: 180,
                 audioUrl: objectUrl,
+                videoUrl: mediaType === 'video' ? objectUrl : undefined,
+                mediaType,
+                mediaSource: 'local-folder',
                 isCustom: true,
                 isNewlyImported: true,
                 isImported: true,
@@ -131,7 +185,7 @@ class LocalMusicScannerService {
         severity: 'info',
         buttonCode: 'DIRECTORY_SCAN',
         mappedAction: 'STORAGE_SCAN',
-        message: `Local music directory scan complete. Found ${scannedFilesCount} audio files, imported ${importedTracks.length} new tracks.`
+        message: `Local media scan complete. Scanned ${scannedFilesCount} files, imported ${importedTracks.length} new audio & video tracks.`
       });
 
       return result;
@@ -157,23 +211,30 @@ class LocalMusicScannerService {
     const currentCodes = [...existingCodes];
 
     // Check if sample tracks were already imported
-    const sampleTitles = ['Retro Synth Waves 2026', 'Arcade Neon Night Ride', 'Vintage Vinyl Lounge Groove'];
+    const sampleItems = [
+      { title: 'Retro Synth Waves 2026', type: 'audio' as const, url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=synthwave-112543.mp3' },
+      { title: 'Arcade Neon Music Video', type: 'video' as const, url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' },
+      { title: 'Vintage Vinyl Lounge Groove', type: 'audio' as const, url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=synthwave-112543.mp3' }
+    ];
     
-    sampleTitles.forEach((st, idx) => {
-      if (!this.knownFileNames.has(st.toLowerCase())) {
-        this.knownFileNames.add(st.toLowerCase());
+    sampleItems.forEach((st, idx) => {
+      if (!this.knownFileNames.has(st.title.toLowerCase())) {
+        this.knownFileNames.add(st.title.toLowerCase());
         const code = generateTrackCode(simulatedTracks.length + currentCodes.length);
         currentCodes.push(code);
 
         simulatedTracks.push({
           id: `sim-local-${Date.now()}-${idx}`,
           code,
-          title: st,
+          title: st.title,
           artist: 'Local Jukebox Sync',
-          album: 'Directory MP3 Auto-Import',
-          genre: 'Local MP3s',
-          duration: 195,
-          audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=synthwave-112543.mp3',
+          album: st.type === 'video' ? 'Local Video Auto-Import' : 'Directory MP3 Auto-Import',
+          genre: st.type === 'video' ? 'Music Videos' : 'Local Media',
+          duration: st.type === 'video' ? 120 : 195,
+          audioUrl: st.url,
+          videoUrl: st.type === 'video' ? st.url : undefined,
+          mediaType: st.type,
+          mediaSource: 'local-folder',
           isCustom: true,
           isNewlyImported: true,
           isImported: true,
@@ -185,7 +246,7 @@ class LocalMusicScannerService {
     const result: ScanResult = {
       timestamp: Date.now(),
       directoryPath: this.scanPathName,
-      scannedFilesCount: 12,
+      scannedFilesCount: 15,
       importedTracks: simulatedTracks,
       newTracksCount: simulatedTracks.length
     };

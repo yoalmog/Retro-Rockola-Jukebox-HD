@@ -2,6 +2,10 @@
  * Types and interfaces for Retro Rockola Jukebox
  */
 
+export type MediaType = 'audio' | 'video';
+export type MediaSourceType = 'built-in' | 'local-file' | 'local-folder' | 'stream-url' | 'custom';
+export type MediaSourceFilter = 'all' | 'audio' | 'video' | 'local' | 'stream' | 'factory';
+
 export interface Song {
   id: string;
   code: string; // e.g., "A01", "B12" (Vintage 2-character select code)
@@ -14,6 +18,9 @@ export interface Song {
   coverArt?: string;
   albumArtUrl?: string;
   audioUrl: string;
+  videoUrl?: string; // Optional direct video stream/file URL (.mp4, .webm, .mov, etc.)
+  mediaType?: MediaType; // 'audio' (default) or 'video'
+  mediaSource?: MediaSourceType; // 'built-in', 'local-file', 'local-folder', 'stream-url', 'custom'
   audioBufferUrl?: string;
   isCustom?: boolean;
   lyrics?: string | string[];
@@ -211,6 +218,7 @@ export interface RockolaConfig {
     themeName?: string;
   };
   customTheme?: any; // ThemeDefinition generated dynamically
+  mediaSourceFilter?: MediaSourceFilter; // Active media source filter (all, audio, video, local, stream, factory)
 }
 
 export interface SystemBackupPackage {

@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Song, SkinType, AppLanguage } from '../types/rockola';
 import { getTheme } from '../utils/themeStyles';
 import { getSongCoverArt, generateComingSoonCoverArt } from '../utils/coverArtUtils';
 import { getTranslation } from '../utils/i18n';
 import { VisualizerCanvas } from './VisualizerCanvas';
-import { Play, Pause, SkipForward, Disc, Sparkles, Activity, Layers, Heart, Mic } from 'lucide-react';
+import { Play, Pause, SkipForward, Disc, Sparkles, Activity, Layers, Heart, Mic, Film, Tv, Maximize2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { audioEngineService } from '../services/audioEngine';
 
 interface NowPlayingDisplayProps {
   currentSong: Song | null;
@@ -22,6 +23,7 @@ interface NowPlayingDisplayProps {
   language?: AppLanguage;
   onToggleFavorite?: (songId: string) => void;
   onOpenLyrics?: () => void;
+  onOpenVideoStage?: () => void;
 }
 
 export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
@@ -38,10 +40,39 @@ export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
   crossfadeEnabled = true,
   language = 'en',
   onToggleFavorite,
-  onOpenLyrics
+  onOpenLyrics,
+  onOpenVideoStage
 }) => {
   const [visualizerMode, setVisualizerMode] = useState<'bars' | 'wave' | 'vu-meters' | 'bubbles'>('bars');
+  const [showInlineVideo, setShowInlineVideo] = useState(true);
+  const inlineVideoRef = useRef<HTMLVideoElement>(null);
   const theme = getTheme(skin);
+
+  const isVideo = currentSong?.mediaType === 'video' || Boolean(currentSong?.videoUrl);
+
+  // Sync inline video element with audio engine if active
+  useEffect(() => {
+    if (isVideo && inlineVideoRef.current) {
+      audioEngineService.attachVideoElement(inlineVideoRef.current);
+      const vUrl = currentSong?.videoUrl || currentSong?.audioUrl;
+      if (vUrl && inlineVideoRef.current.src !== vUrl) {
+        inlineVideoRef.current.src = vUrl;
+        if (isPlaying) {
+          inlineVideoRef.current.play().catch(() => {});
+        }
+      }
+    }
+  }, [isVideo, currentSong]);
+
+  useEffect(() => {
+    if (isVideo && inlineVideoRef.current) {
+      if (isPlaying) {
+        inlineVideoRef.current.play().catch(() => {});
+      } else {
+        inlineVideoRef.current.pause();
+      }
+    }
+  }, [isPlaying, isVideo]);
 
   const formatTime = (timeInSec: number) => {
     const mins = Math.floor(timeInSec / 60);
@@ -134,20 +165,39 @@ export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
                   <span className="text-[10px] font-chakra px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 uppercase border border-cyan-500/30">
                     {currentSong.genre}
                   </span>
+                  {isVideo && (
+                    <span className="text-[10px] font-chakra px-1.5 py-0.5 rounded bg-purple-600 text-white font-black flex items-center gap-1 shadow-[0_0_8px_rgba(168,85,247,0.6)]">
+                      <Film className="w-3 h-3" />
+                      <span>HD VIDEO</span>
+                    </span>
+                  )}
                 </div>
 
-                {/* Favorite Heart Toggle */}
-                <button
-                  onClick={() => onToggleFavorite && onToggleFavorite(currentSong.id)}
-                  className={`p-1.5 rounded-lg transition-all cursor-pointer border ${
-                    currentSong.favorite
-                      ? 'bg-rose-500/20 border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-                      : 'bg-black/40 hover:bg-rose-500/20 border-white/10'
-                  }`}
-                  title={currentSong.favorite ? 'Remove from Favorites' : 'Add to Favorites'}
-                >
-                  <Heart className={`w-4 h-4 ${currentSong.favorite ? 'fill-rose-500 text-rose-500' : 'text-gray-400 hover:text-rose-400'}`} />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {isVideo && onOpenVideoStage && (
+                    <button
+                      onClick={onOpenVideoStage}
+                      className="p-1.5 rounded-lg bg-purple-600/30 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/40 text-xs font-chakra font-bold flex items-center gap-1 transition-all cursor-pointer shadow"
+                      title="Open Cinema Video Stage"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">STAGE</span>
+                    </button>
+                  )}
+
+                  {/* Favorite Heart Toggle */}
+                  <button
+                    onClick={() => onToggleFavorite && onToggleFavorite(currentSong.id)}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer border ${
+                      currentSong.favorite
+                        ? 'bg-rose-500/20 border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.4)]'
+                        : 'bg-black/40 hover:bg-rose-500/20 border-white/10'
+                    }`}
+                    title={currentSong.favorite ? 'Remove from Favorites' : 'Add to Favorites'}
+                  >
+                    <Heart className={`w-4 h-4 ${currentSong.favorite ? 'fill-rose-500 text-rose-500' : 'text-gray-400 hover:text-rose-400'}`} />
+                  </button>
+                </div>
               </div>
 
               <h4 className={`font-black font-chakra text-white truncate leading-tight mt-0.5 ${
@@ -163,25 +213,65 @@ export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
             </div>
           </div>
 
-          {/* Real-time Web Audio API Spectrum Visualizer */}
-          <div className="relative h-16 w-full bg-[#060810] rounded-xl p-1 border border-cyan-500/20 shadow-inner overflow-hidden">
-            <VisualizerCanvas skin={skin} isPlaying={isPlaying} mode={visualizerMode} />
-            
-            {/* Visualizer Mode Switcher Pill */}
-            <div className="absolute bottom-1 right-1.5 flex items-center gap-1 bg-black/80 px-1.5 py-0.5 rounded-md border border-white/10 text-[9px] font-mono text-gray-300">
-              {(['bars', 'wave', 'vu-meters', 'bubbles'] as const).map(m => (
+          {/* Real-time Web Audio API Spectrum Visualizer or Inline Video Screen */}
+          {isVideo && showInlineVideo ? (
+            <div className="relative h-28 sm:h-36 w-full bg-black rounded-xl border border-purple-500/40 shadow-inner overflow-hidden flex items-center justify-center">
+              <video
+                ref={inlineVideoRef}
+                playsInline
+                className="w-full h-full object-contain bg-black"
+                onEnded={onSkipNext}
+              />
+              <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
+                {onOpenVideoStage && (
+                  <button
+                    onClick={onOpenVideoStage}
+                    className="px-2 py-0.5 rounded bg-black/80 hover:bg-purple-600 text-white border border-white/20 text-[10px] font-chakra flex items-center gap-1 cursor-pointer transition-all shadow"
+                    title="Fullscreen Cinema Stage"
+                  >
+                    <Maximize2 className="w-3 h-3" />
+                    <span>CINEMA STAGE</span>
+                  </button>
+                )}
                 <button
-                  key={m}
-                  onClick={() => setVisualizerMode(m)}
-                  className={`px-1 rounded uppercase cursor-pointer transition-colors ${
-                    visualizerMode === m ? 'bg-cyan-500 text-black font-bold' : 'hover:text-white text-gray-400'
-                  }`}
+                  onClick={() => setShowInlineVideo(false)}
+                  className="px-1.5 py-0.5 rounded bg-black/80 hover:bg-white/20 text-gray-300 text-[10px] font-chakra cursor-pointer"
+                  title="Switch to Audio Spectrum"
                 >
-                  {m === 'vu-meters' ? 'VU' : m}
+                  SPECTRUM
                 </button>
-              ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative h-16 w-full bg-[#060810] rounded-xl p-1 border border-cyan-500/20 shadow-inner overflow-hidden">
+              <VisualizerCanvas skin={skin} isPlaying={isPlaying} mode={visualizerMode} />
+              
+              {/* Visualizer Mode Switcher Pill */}
+              <div className="absolute bottom-1 right-1.5 flex items-center gap-1 bg-black/80 px-1.5 py-0.5 rounded-md border border-white/10 text-[9px] font-mono text-gray-300">
+                {isVideo && (
+                  <button
+                    onClick={() => setShowInlineVideo(true)}
+                    className="px-1 rounded uppercase cursor-pointer text-purple-400 font-bold hover:text-purple-300 mr-1 flex items-center gap-0.5"
+                    title="Switch to Video Screen"
+                  >
+                    <Film className="w-2.5 h-2.5" />
+                    <span>VIDEO</span>
+                  </button>
+                )}
+                {(['bars', 'wave', 'vu-meters', 'bubbles'] as const).map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setVisualizerMode(m)}
+                    className={`px-1 rounded uppercase cursor-pointer transition-colors ${
+                      visualizerMode === m ? 'bg-cyan-500 text-black font-bold' : 'hover:text-white text-gray-400'
+                    }`}
+                  >
+                    {m === 'vu-meters' ? 'VU' : m}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Progress Bar & Timing */}
           <div>
@@ -205,6 +295,16 @@ export const NowPlayingDisplay: React.FC<NowPlayingDisplayProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              {isVideo && onOpenVideoStage && (
+                <button
+                  onClick={onOpenVideoStage}
+                  className="px-3 py-1.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 text-purple-300 border border-purple-500/40 transition-all text-xs font-chakra font-bold flex items-center gap-1.5 active:scale-95 cursor-pointer shadow"
+                  title="Open Cinema Video Stage"
+                >
+                  <Film className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                  <span className="hidden sm:inline">Cinema Stage</span>
+                </button>
+              )}
               <button
                 onClick={onOpenLyrics}
                 className="px-3 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 transition-all text-xs font-chakra font-bold flex items-center gap-1.5 active:scale-95 cursor-pointer shadow"

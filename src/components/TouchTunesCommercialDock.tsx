@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, LayoutGrid, Flame, Camera, MoreHorizontal, Smartphone, Coins } from 'lucide-react';
+import { Home, Search, LayoutGrid, Flame, Camera, MoreHorizontal, Smartphone, Coins, Layers, Film } from 'lucide-react';
 import { soundEffects } from '../services/soundEffects';
 import { AppLanguage } from '../types/rockola';
 import { getTranslation } from '../utils/i18n';
@@ -9,6 +9,7 @@ interface TouchTunesCommercialDockProps {
   onSelectTab: (tab: 'home' | 'search' | 'browse' | 'top-played' | 'photobooth' | 'more') => void;
   onOpenCoinModal: () => void;
   onOpenAppPromoModal?: () => void;
+  onOpenMediaSources?: () => void;
   queueCount: number;
   language?: AppLanguage;
   title?: string;
@@ -19,6 +20,7 @@ export const TouchTunesCommercialDock: React.FC<TouchTunesCommercialDockProps> =
   onSelectTab,
   onOpenCoinModal,
   onOpenAppPromoModal,
+  onOpenMediaSources,
   queueCount,
   language = 'en',
   title
@@ -122,6 +124,21 @@ export const TouchTunesCommercialDock: React.FC<TouchTunesCommercialDockProps> =
             <Camera className="w-4 h-4" />
             <span className="text-[11px] sm:text-xs">PHOTO BOOTH</span>
           </button>
+
+          {/* MEDIA SOURCES (Music & Video source selector) */}
+          {onOpenMediaSources && (
+            <button
+              onClick={() => {
+                soundEffects.playButtonClick();
+                onOpenMediaSources();
+              }}
+              className="px-3 sm:px-4 py-1.5 rounded-lg font-chakra font-black text-xs sm:text-sm flex flex-col sm:flex-row items-center gap-1 cursor-pointer transition-all bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 hover:text-white border border-purple-500/40 shadow-[0_0_12px_rgba(168,85,247,0.3)]"
+              title="Media Source & Video Options"
+            >
+              <Film className="w-4 h-4 text-purple-400" />
+              <span className="text-[11px] sm:text-xs uppercase">SOURCES</span>
+            </button>
+          )}
 
           {/* MORE Tab */}
           <button

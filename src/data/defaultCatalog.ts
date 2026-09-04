@@ -74,6 +74,14 @@ export const GENRE_CATEGORIES: GenreCategory[] = [
     badge: '70s'
   },
   {
+    id: 'videos',
+    name: 'Music Videos & Concerts',
+    nameEs: 'Videos Musicales HD',
+    iconName: 'Tv',
+    color: 'from-violet-600 to-fuchsia-950',
+    badge: 'VIDEOS'
+  },
+  {
     id: 'country',
     name: 'Country & Saloon Roots',
     nameEs: 'Country & Saloon',
@@ -629,6 +637,115 @@ export const DEFAULT_SONGS: Song[] = [
       'Should I give up, or should I just keep chasing pavements?',
       'Even if it leads nowhere',
       'Or would it be a waste of time?'
+    ]
+  },
+  // ============================================
+  // HD MUSIC VIDEOS & CONCERT VISUALS
+  // ============================================
+  {
+    id: 'vid-tears-steel',
+    code: 'V01',
+    title: 'Tears of Steel (Synthwave OST)',
+    artist: 'Blender & Sci-Fi Syndicate',
+    album: 'Cyberpunk Soundscapes HD',
+    genre: 'videos',
+    year: 2024,
+    duration: 734,
+    coverArt: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&q=80',
+    albumArtUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&q=80',
+    audioUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    mediaType: 'video',
+    mediaSource: 'built-in',
+    playCount: 520,
+    lyrics: [
+      'Neon reflections on titanium rain',
+      'Distant holographic echoes of the lost domain',
+      'Synthesizers surge as the cinematic sky turns blue'
+    ]
+  },
+  {
+    id: 'vid-big-buck',
+    code: 'V02',
+    title: 'Big Buck Overture (Symphonic)',
+    artist: 'Peach Studio Orchestra',
+    album: 'Cinematic Concert Series',
+    genre: 'videos',
+    year: 2023,
+    duration: 596,
+    coverArt: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80',
+    albumArtUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80',
+    audioUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    mediaType: 'video',
+    mediaSource: 'built-in',
+    playCount: 380,
+    lyrics: [
+      'Morning sunlight in the animated glade',
+      'Orchestral strings rising through the forest shade'
+    ]
+  },
+  {
+    id: 'vid-bigger-blazes',
+    code: 'V03',
+    title: 'Electric Stage Blaze (Live Rock)',
+    artist: 'Chrome Overdrive',
+    album: 'Live Arena Showcase',
+    genre: 'rock',
+    year: 2024,
+    duration: 15,
+    coverArt: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80',
+    albumArtUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80',
+    audioUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    mediaType: 'video',
+    mediaSource: 'built-in',
+    playCount: 640,
+    lyrics: [
+      'Strobe lights blasting through the arena smoke',
+      'The amps ignite when the power chord spoke'
+    ]
+  },
+  {
+    id: 'vid-meltdowns',
+    code: 'V04',
+    title: 'Heavy Metal Meltdown (Guitar Solo)',
+    artist: 'Midnight Thrashers',
+    album: 'High Voltage Videos',
+    genre: 'rock',
+    year: 2024,
+    duration: 15,
+    coverArt: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=400&q=80',
+    albumArtUrl: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=400&q=80',
+    audioUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+    mediaType: 'video',
+    mediaSource: 'built-in',
+    playCount: 430,
+    lyrics: [
+      'Distortion roaring at the redline speed',
+      'A blazing solo is all we need'
+    ]
+  },
+  {
+    id: 'vid-elephants-dream',
+    code: 'V05',
+    title: 'Elephants Dream (Electronic OST)',
+    artist: 'Orange Synth Collective',
+    album: 'Mechanical Symphony',
+    genre: 'videos',
+    year: 2023,
+    duration: 653,
+    coverArt: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80',
+    albumArtUrl: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80',
+    audioUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    mediaType: 'video',
+    mediaSource: 'built-in',
+    playCount: 290,
+    lyrics: [
+      'Through copper corridors and gears of time',
+      'Electronic frequencies align and climb'
     ]
   }
 ];

@@ -15,6 +15,7 @@ interface CategoryTab {
 
 const CATEGORY_TABS: CategoryTab[] = [
   { id: 'populares', name: 'POPULARES', icon: '🔥', badge: 'TOP 40', accentColor: '#06b6d4' },
+  { id: 'videos', name: 'VIDEOS', icon: '🎬', badge: 'HD VIDEO', accentColor: '#a855f7' },
   { id: 'artistas', name: 'ARTISTAS', icon: '🎤', badge: 'FEATURED', accentColor: '#e2e8f0' },
   { id: 'generos', name: 'GÉNEROS', icon: '🎸', badge: 'ROCK & POP', accentColor: '#ef4444' },
   { id: 'nuevas', name: 'NUEVAS', icon: '✨', badge: 'NEW 2026', accentColor: '#10b981' },
@@ -64,6 +65,10 @@ export const TouchTunesCarousel: React.FC<TouchTunesCarouselProps> = ({
     if (!songs || songs.length === 0) return [];
 
     switch (activeTabId) {
+      case 'videos': {
+        const vids = songs.filter(s => s.mediaType === 'video' || Boolean(s.videoUrl));
+        return vids.length > 0 ? vids : songs;
+      }
       case 'favoritas': {
         const favs = songs.filter(s => s.favorite);
         return favs.length > 0 ? favs : songs;
@@ -517,9 +522,19 @@ export const TouchTunesCarousel: React.FC<TouchTunesCarouselProps> = ({
                       />
 
                       {/* Track Code Badge */}
-                      <div className="absolute top-2 left-2 bg-black/85 backdrop-blur-md px-2 py-0.5 rounded-md border border-cyan-400/50 text-cyan-300 font-mono font-black text-xs shadow-lg">
-                        {song.code}
+                      <div className="absolute top-2 left-2 bg-black/85 backdrop-blur-md px-2 py-0.5 rounded-md border border-cyan-400/50 text-cyan-300 font-mono font-black text-xs shadow-lg flex items-center gap-1">
+                        <span>{song.code}</span>
+                        {(song.mediaType === 'video' || Boolean(song.videoUrl)) && (
+                          <span className="text-[10px] text-purple-400 font-chakra font-black">🎬</span>
+                        )}
                       </div>
+
+                      {/* Video / Local File Indicator */}
+                      {(song.mediaType === 'video' || Boolean(song.videoUrl)) && (
+                        <div className="absolute bottom-2 left-2 bg-purple-900/90 backdrop-blur-md px-1.5 py-0.5 rounded text-white font-chakra font-black text-[9px] flex items-center gap-1 shadow border border-purple-400/50">
+                          <span>HD VIDEO</span>
+                        </div>
+                      )}
 
                       {/* Favorite Heart Toggle */}
                       {isCenter && onToggleFavorite && (

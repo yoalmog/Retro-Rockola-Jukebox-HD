@@ -59,6 +59,10 @@ class AudioEngineService {
   // System Health & Audio Diagnostics
   private underrunCount: number = 0;
 
+  // Video playback support
+  private videoElement: HTMLVideoElement | null = null;
+  private isVideoTrack: boolean = false;
+
   // Procedural synth state
   private isSynthesizing: boolean = false;
   private synthIntervalId: number | null = null;
@@ -74,6 +78,17 @@ class AudioEngineService {
     if (callbacks) {
       this.callbacks = callbacks;
     }
+  }
+
+  public attachVideoElement(videoEl: HTMLVideoElement | null) {
+    this.videoElement = videoEl;
+    if (this.videoElement) {
+      this.videoElement.volume = this.volume;
+    }
+  }
+
+  public getIsVideoTrack(): boolean {
+    return this.isVideoTrack;
   }
 
   private getAudioContext(): AudioContext | null {
@@ -353,6 +368,7 @@ class AudioEngineService {
     }
     if (this.channelA?.element) this.channelA.element.volume = this.volume;
     if (this.channelB?.element) this.channelB.element.volume = this.volume;
+    if (this.videoElement) this.videoElement.volume = this.volume;
   }
 
   public getVolume(): number {
@@ -394,6 +410,38 @@ class AudioEngineService {
   public playSong(song: Song) {
     this.setupChannels();
     this.currentSong = song;
+
+    const isVideo = song.mediaType === 'video' || Boolean(song.videoUrl);
+    if (isVideo) {
+      this.isVideoTrack = true;
+      this.stopAudioElements();
+      if (this.synthIntervalId) {
+        clearInterval(this.synthIntervalId);
+        this.synthIntervalId = null;
+      }
+      this.isSynthesizing = false;
+      this.isPlaying = true;
+      this.callbacks.onPlayStateChange?.(true);
+
+      if (this.videoElement) {
+        const vUrl = song.videoUrl || song.audioUrl;
+        if (this.videoElement.src !== vUrl) {
+          this.videoElement.src = vUrl;
+        }
+        this.videoElement.currentTime = 0;
+        this.videoElement.volume = this.volume;
+        this.videoElement.play().catch(err => {
+          console.warn('Video auto-play notice:', err);
+        });
+      }
+      return;
+    }
+
+    // Standard audio track
+    this.isVideoTrack = false;
+    if (this.videoElement) {
+      this.videoElement.pause();
+    }
 
     const isCustom = song.audioUrl && (
       song.audioUrl.startsWith('http') ||
@@ -516,6 +564,10 @@ class AudioEngineService {
     this.isPlaying = false;
     this.callbacks.onPlayStateChange?.(false);
 
+    if (this.isVideoTrack && this.videoElement) {
+      this.videoElement.pause();
+    }
+
     if (this.channelA?.element && this.channelA.isPlaying) {
       this.channelA.element.pause();
     }
@@ -530,6 +582,13 @@ class AudioEngineService {
   }
 
   public resume() {
+    if (this.isVideoTrack && this.videoElement) {
+      this.isPlaying = true;
+      this.callbacks.onPlayStateChange?.(true);
+      this.videoElement.play().catch(() => {});
+      return;
+    }
+
     const activeChannel = this.activeChannelId === 'A' ? this.channelA : this.channelB;
 
     if (activeChannel && activeChannel.element.src && !this.isSynthesizing) {
@@ -549,6 +608,11 @@ class AudioEngineService {
     this.isSynthesizing = false;
     this.callbacks.onPlayStateChange?.(false);
 
+    if (this.videoElement) {
+      this.videoElement.pause();
+      this.videoElement.currentTime = 0;
+    }
+
     this.stopAudioElements();
 
     if (this.synthIntervalId) {
@@ -565,6 +629,9 @@ class AudioEngineService {
   }
 
   public seek(seconds: number) {
+    if (this.isVideoTrack && this.videoElement) {
+      this.videoElement.currentTime = seconds;
+    }
     const activeChannel = this.activeChannelId === 'A' ? this.channelA : this.channelB;
     if (activeChannel && activeChannel.element) {
       activeChannel.element.currentTime = seconds;
@@ -753,3 +820,4 @@ class AudioEngineService {
 }
 
 export const audioEngine = new AudioEngineService();
+export const audioEngineService = audioEngine;
