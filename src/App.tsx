@@ -41,10 +41,11 @@ import { MobileRemoteOverlay } from './components/MobileRemoteOverlay';
 import { LyricsOverlay } from './components/LyricsOverlay';
 import { MediaSourceSelectorModal } from './components/MediaSourceSelectorModal';
 import { VideoJukeboxStage } from './components/VideoJukeboxStage';
+import { FileManagerModal } from './components/FileManagerModal';
 import { MediaSourceFilter } from './types/rockola';
 
 // Icons
-import { Hash, Search, Disc, Sparkles, AlertCircle, Radio, ListMusic, Palette, Crown, Settings, LayoutGrid, Layers, Tv, Shuffle, Camera, Smartphone, Home, Film } from 'lucide-react';
+import { Hash, Search, Disc, Sparkles, AlertCircle, Radio, ListMusic, Palette, Crown, Settings, LayoutGrid, Layers, Tv, Shuffle, Camera, Smartphone, Home, Film, FolderOpen } from 'lucide-react';
 
 export default function App() {
   // App Configuration
@@ -91,6 +92,7 @@ export default function App() {
   const [isPhotoBoothOpen, setIsPhotoBoothOpen] = useState(false);
   const [isMobileRemoteOpen, setIsMobileRemoteOpen] = useState(false);
   const [isMediaSourceModalOpen, setIsMediaSourceModalOpen] = useState(false);
+  const [isFileManagerOpen, setIsFileManagerOpen] = useState(false);
 
   // Dedicated Video Player for Clips State (floating PiP or fullscreen cinema theater)
   const [videoPlayerMode, setVideoPlayerMode] = useState<'closed' | 'floating' | 'cinema'>('closed');
@@ -149,6 +151,54 @@ export default function App() {
     setCustomSongs([]);
     saveCustomSongs([]);
     showToast('Custom imported media cleared');
+  };
+
+  const handleUpdateSong = (updatedSong: Song) => {
+    setCustomSongs(prev => {
+      const exists = prev.some(s => s.id === updatedSong.id);
+      let updated: Song[];
+      if (exists) {
+        updated = prev.map(s => s.id === updatedSong.id ? updatedSong : s);
+      } else {
+        updated = [...prev, { ...updatedSong, isCustom: true }];
+      }
+      saveCustomSongs(updated);
+      return updated;
+    });
+    if (currentSong?.id === updatedSong.id) {
+      setCurrentSong(updatedSong);
+    }
+    showToast(`✓ Updated tags: [${updatedSong.code}] ${updatedSong.title}`);
+  };
+
+  const handleDeleteSong = (songId: string) => {
+    setCustomSongs(prev => {
+      const updated = prev.filter(s => s.id !== songId);
+      saveCustomSongs(updated);
+      return updated;
+    });
+    setQueue(prev => prev.filter(item => item.song.id !== songId));
+    showToast('Removed file from library');
+  };
+
+  const handleBatchDeleteSongs = (songIds: string[]) => {
+    setCustomSongs(prev => {
+      const updated = prev.filter(s => !songIds.includes(s.id));
+      saveCustomSongs(updated);
+      return updated;
+    });
+    setQueue(prev => prev.filter(item => !songIds.includes(item.song.id)));
+    showToast(`Deleted ${songIds.length} file(s) from library`);
+  };
+
+  const handleDirectPlaySong = (song: Song) => {
+    setCurrentSong(song);
+    audioEngine.playSong(song);
+    soundEffects.playRecordScratch();
+    showToast(`▶ Now Playing: [${song.code}] ${song.title}`);
+    if (song.mediaType === 'video' || song.videoUrl) {
+      setVideoPlayerMode('floating');
+    }
   };
 
   // Alert Banner toast
@@ -553,6 +603,14 @@ export default function App() {
         return;
       }
 
+      // Files Manager (F3 or F Key)
+      if (key === 'F3' || ((key === 'f' || key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey)) {
+        e.preventDefault();
+        soundEffects.playButtonClick();
+        setIsFileManagerOpen(prev => !prev);
+        return;
+      }
+
       // A / Left Arrow -> Rotate Left
       if (key.toUpperCase() === 'A' || code === 'KeyA' || config.keyBindings.left.includes(code) || key === 'ArrowLeft') {
         e.preventDefault();
@@ -750,6 +808,19 @@ export default function App() {
               >
                 <Film className="w-3.5 h-3.5" />
                 <span className="uppercase">{activeMediaFilter === 'all' ? 'MEDIA' : activeMediaFilter.toUpperCase()}</span>
+              </button>
+
+              {/* Dedicated Files Manager Button */}
+              <button
+                onClick={() => {
+                  soundEffects.playButtonClick();
+                  setIsFileManagerOpen(true);
+                }}
+                className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg bg-[#141828] hover:bg-emerald-600 hover:text-white text-emerald-300 border border-emerald-500/40 text-[11px] sm:text-xs font-chakra font-bold flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow transition-all"
+                title="Jukebox Files Manager (Media Storage, Tag Editor, Batch Import, Codecs) [Press F]"
+              >
+                <FolderOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <span>FILES</span>
               </button>
 
               {/* Search Button */}
@@ -1195,6 +1266,26 @@ export default function App() {
             setIsMediaSourceModalOpen(false);
             setVideoPlayerMode('floating');
           }}
+          onOpenFileManager={() => {
+            setIsMediaSourceModalOpen(false);
+            setIsFileManagerOpen(true);
+          }}
+        />
+
+        {/* Full-Featured Jukebox Files Manager Modal */}
+        <FileManagerModal
+          isOpen={isFileManagerOpen}
+          onClose={() => setIsFileManagerOpen(false)}
+          allSongs={allSongs}
+          customSongs={customSongs}
+          onImportSongs={handleImportMediaSongs}
+          onUpdateSong={handleUpdateSong}
+          onDeleteSong={handleDeleteSong}
+          onBatchDeleteSongs={handleBatchDeleteSongs}
+          onClearCustomSongs={handleClearCustomSongs}
+          onPlaySong={handleDirectPlaySong}
+          onQueueSong={handleQueueSong}
+          onOpenVideoStage={(mode) => setVideoPlayerMode(mode || 'floating')}
         />
 
       </div>

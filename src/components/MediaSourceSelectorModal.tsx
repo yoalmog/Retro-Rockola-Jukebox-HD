@@ -39,6 +39,7 @@ interface MediaSourceSelectorModalProps {
   onImportSongs: (newSongs: Song[]) => void;
   onClearCustomSongs: () => void;
   onOpenVideoStage?: () => void;
+  onOpenFileManager?: () => void;
 }
 
 export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> = ({
@@ -50,7 +51,8 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
   customSongs,
   onImportSongs,
   onClearCustomSongs,
-  onOpenVideoStage
+  onOpenVideoStage,
+  onOpenFileManager
 }) => {
   const [activeTab, setActiveTab] = useState<'sources' | 'import-files' | 'scan-folder' | 'add-stream'>('sources');
   const [isDragging, setIsDragging] = useState(false);
@@ -244,6 +246,20 @@ export const MediaSourceSelectorModal: React.FC<MediaSourceSelectorModalProps> =
             <Globe className="w-4 h-4" />
             <span>ADD STREAM URL</span>
           </button>
+
+          {onOpenFileManager && (
+            <button
+              onClick={() => {
+                soundEffects.playButtonClick();
+                onOpenFileManager();
+              }}
+              className="ml-auto px-3 sm:px-4 py-2 rounded-lg font-chakra font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+              title="Open Full Jukebox Files Manager with Tag Editor & Diagnostics"
+            >
+              <Folder className="w-4 h-4 text-emerald-200" />
+              <span>FILES MANAGER</span>
+            </button>
+          )}
         </div>
 
         {/* Scan / Status Alert Notification */}
